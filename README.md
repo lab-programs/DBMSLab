@@ -384,3 +384,189 @@ END;
 /
 ```
 ---
+## Exercise 4
+
+### SQL
+
+#### Create Part table
+
+```sql
+SQL> CREATE TABLE PART(
+  2  	PID INTEGER PRIMARY KEY,
+  3  	PNAME VARCHAR(25),
+  4  	COLOR VARCHAR(25)
+  5  );
+```
+
+#### Create Warehouse table
+
+```sql
+SQL> CREATE TABLE WAREHOUSE (
+  2  	WID INTEGER PRIMARY KEY,
+  3     WNAME VARCHAR(25),
+  4  	WADDRESS VARCHAR(50)
+  5  );
+```
+
+#### Create Shipment table
+
+```sql
+SQL> CREATE TABLE SHIPMENT (
+  2  	PID INTEGER,
+  3  	WID INTEGER,
+  4  	QUANTITY INTEGER,
+  5  	SDATE VARCHAR(10),  
+  6  	FOREIGN KEY(PID) REFERENCES PART(PID) ON DELETE CASCADE,
+  7  	FOREIGN KEY(WID) REFERENCES WAREHOUSE(WID) ON DELETE CASCADE,
+  8  	PRIMARY KEY(PID, WID)
+  9  );
+```
+
+#### Obtain the Names of warehouses which have shipped red colored parts.
+
+```sql
+SQL> SELECT DISTINCT(WNAME)
+  2  FROM WAREHOUSE, SHIPMENT
+  3  WHERE WAREHOUSE.WID = SHIPMENT.WID
+  4  AND SHIPMENT.PID IN (
+  5  	  SELECT PID FROM PART WHERE COLOR='RED'
+  6  );
+```
+
+#### Retrieve the PNO of the parts shipped by all the warehouses
+
+```sql
+SQL> SELECT PID
+  2  FROM PART
+  3  WHERE NOT EXISTS (
+  4  	  SELECT WID FROM WAREHOUSE
+  5  	  MINUS
+  6  	  SELECT SHIPMENT.WID FROM SHIPMENT WHERE SHIPMENT.PID = PART.PID
+  7  );
+```
+
+#### Find the number of parts supplied by each warehouse
+
+```sql
+SQL> SELECT WAREHOUSE.WID, WNAME, COUNT(WAREHOUSE.WID)
+  2  FROM WAREHOUSE, SHIPMENT
+  3  WHERE WAREHOUSE.WID = SHIPMENT.WID
+  4  GROUP BY WAREHOUSE.WID, WNAME
+  5  ORDER BY WAREHOUSE.WID;
+```
+
+
+#### List the warehouse details which ships maximum quantity of parts
+
+```sql
+SQL> SELECT WID
+  2  FROM (
+  3  	  SELECT WID, SUM(QUANTITY) AS TOTAL
+  4  	  FROM SHIPMENT
+  5  	  GROUP BY WID
+  6  )
+  7  WHERE TOTAL = (
+  8  	  SELECT MAX(TOTAL)
+  9  	  FROM (
+ 10  	  	  SELECT WID, SUM(QUANTITY) AS TOTAL
+ 11  	  	  FROM SHIPMENT
+ 12  	  	  GROUP BY WID
+ 13  	  )
+ 14  );
+```
+---
+### MongoDB
+
+```js
+> use shipment
+
+> db.createCollection('Warehouse');
+
+> db.Warehouse.insert({'WID':1, 'WNAME':'WA', 'PID':1, 'PNAME':'WOOD', 'QUANTITY':10});
+
+> db.Warehouse.insert({'WID':1, 'WNAME':'WA', 'PID':2, 'PNAME':'STEEL', 'QUANTITY':20});
+
+> db.Warehouse.insert({'WID':2, 'WNAME':'WB', 'PID':2, 'PNAME':'STEEL', 'QUANTITY':15});
+```
+
+#### Find the parts shipped from warehouse :Wname”
+
+```js
+> db.Warehouse.find({'WNAME':'WA'}, {'_id':0, 'PID':1, 'PNAME':1}).pretty();
+```
+
+#### List the total quantity supplied from each warehouse
+
+```js
+> db.Warehouse.aggregate([
+	{
+		$group: {
+			'_id': '$WID', 
+			total: {
+				$sum: '$QUANTITY'
+			}
+		}
+	}
+]);
+```
+---
+### PL/SQL
+
+#### Using cursors demonstrate the process of copying the contents of one table to a new table
+
+```sql
+DECLARE
+	W_ID	WAREHOUSE.WID%TYPE;
+	W_NAME  WAREHOUSE.WNAME%TYPE;
+	W_ADDRESS  WAREHOUSE.WADDRESS%TYPE;
+
+	CURSOR C IS SELECT * FROM WAREHOUSE;
+
+BEGIN
+	OPEN C;
+	
+	LOOP
+		FETCH C INTO W_ID, W_NAME, W_ADDRESS;
+		EXIT WHEN C%NOTFOUND;
+
+		INSERT INTO NEW_WAREHOUSE(WID, WNAME, WADDRESS)
+		VAUES(W_ID, W_NAME, W_ADDRESS);
+
+	END LOOP;
+	
+	CLOSE C;
+END;
+/
+```
+---
+## Exercise 5
+
+### SQL
+
+#### Create Book table
+
+SQL> CREATE TABLE BOOK (
+  2  	ISBN NUMBER(12) PRIMARY KEY,
+  3  	BTITLE VARCHAR(25),
+  4  	BAUTHOR VARCHAR(25),
+  5  BPUBLISHER VARCHAR(25)
+  6  );
+
+#### Create Student table
+
+SQL> CREATE TABLE STUDENT (
+  2  	USN NUMBER(10) PRIMARY KEY,
+  3  	SNAME VARCHAR(10),
+  4  	AGE NUMBER(2)
+  5  );
+
+#### Create Borrowed table
+
+SQL> CREATE TABLE BORROWED ( 
+  2  	USN NUMBER(10),
+  3  	ISBN NUMBER(12),
+  4  	BORROWED_DATE VARCHAR(10),
+  5  	PRIMARY KEY(USN, ISBN),
+  6  	FOREIGN KEY(USN) REFERENCES STUDENT(USN) ON DELETE CASCADE,
+  7  	FOREIGN KEY(ISBN) REFERENCES BOOK(ISBN) ON DELETE CASCADE
+  8  );
