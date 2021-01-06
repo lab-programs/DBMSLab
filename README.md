@@ -489,7 +489,7 @@ SQL> SELECT WID
 > db.Warehouse.insert({'WID':2, 'WNAME':'WB', 'PID':2, 'PNAME':'STEEL', 'QUANTITY':15});
 ```
 
-#### Find the parts shipped from warehouse :Wname”
+#### Find the parts shipped from warehouse 'WA'
 
 ```js
 > db.Warehouse.find({'WNAME':'WA'}, {'_id':0, 'PID':1, 'PNAME':1}).pretty();
@@ -545,23 +545,28 @@ END;
 
 #### Create Book table
 
+```sql
 SQL> CREATE TABLE BOOK (
   2  	ISBN NUMBER(12) PRIMARY KEY,
   3  	BTITLE VARCHAR(25),
   4  	BAUTHOR VARCHAR(25),
   5  BPUBLISHER VARCHAR(25)
   6  );
+```
 
 #### Create Student table
 
+```sql
 SQL> CREATE TABLE STUDENT (
   2  	USN NUMBER(10) PRIMARY KEY,
   3  	SNAME VARCHAR(10),
   4  	AGE NUMBER(2)
   5  );
+```
 
 #### Create Borrowed table
 
+```sql
 SQL> CREATE TABLE BORROWED ( 
   2  	USN NUMBER(10),
   3  	ISBN NUMBER(12),
@@ -570,3 +575,97 @@ SQL> CREATE TABLE BORROWED (
   6  	FOREIGN KEY(USN) REFERENCES STUDENT(USN) ON DELETE CASCADE,
   7  	FOREIGN KEY(ISBN) REFERENCES BOOK(ISBN) ON DELETE CASCADE
   8  );
+```
+
+#### Obtain the name of the student who has borrowed the book bearing ISBN ‘123’
+
+```sql
+SQL> SELECT SNAME
+  2  FROM STUDENT S, BORROWED BR
+  3  WHERE S.USN = BR.USN
+  4  AND BR.ISBN = 123;
+```
+
+#### Obtain the Names of students who have borrowed database books
+
+```sql
+SQL> SELECT SNAME
+  2  FROM STUDENT S, BORROWED BR, BOOK BK
+  3  WHERE S.USN = BR.USN AND BR.ISBN = BK.ISBN
+  4  AND UPPER(BR.TITLE) LIKE '%DATABASE%'
+```
+
+#### Find the number of books borrowed by each student
+
+```sql
+SQL> SELECT S.USN, S.SNAME, COUNT(S.USN) AS NO_OF_BOOKS_BORROWED
+  2  FROM STUDENT S, BORROWED BR
+  3  WHERE S.USN = BR.USN
+  4  GROUP BY S.USN, S.SNAME
+```
+---
+### MongoDB
+
+```js
+> use library
+
+> db.createCollection('Borrowed')
+
+> db.Borrowed('USN':1, 'SNAME':'A', 'ISBN':123, 'BTITLE':'X', 'DOMAIN':'DATABASE'});
+
+> db.Borrowed.insert({'USN':1, 'SNAME':'A', 'ISBN':123, 'BTITLE':'X', 'DOMAIN':'DATABASE'});
+
+> db.Borrowed.insert({'USN':2, 'SNAME':'B', 'ISBN':123, 'BTITLE':'X', 'DOMAIN':'DATABASE'});
+
+> db.Borrowed.insert({'USN':2, 'SNAME':'B', 'ISBN':456, 'BTITLE':'Y', 'DOMAIN':'CLOUD'});
+```
+
+#### Obtain the name of the student who has borrowed the book bearing ISBN ‘123’
+
+```js
+> db.Borrowed.find({'ISBN':123}, {'_id':0, 'USN':1, 'SNAME':1});
+```
+
+#### Obtain the Names of students who have borrowed database books
+
+```js
+> db.Borrowed.find({'DOMAIN':'DATABASE'}, {'_id':0, 'USN':1, 'SNAME':1});
+```
+---
+
+### PL/SQL
+
+#### Write a PL/SQL procedure to print the first 8 Fibonacci numbers and a program to call the same
+
+```sql
+
+CREATE PROCEDURE FIBO_PROC AS
+	BEGIN 
+
+		DECLARE 
+			A NUMBER; 
+   	 		B NUMBER; 
+   	 		C NUMBER;
+   	 		N NUMBER;
+		
+		BEGIN
+			N := 8;
+			A := 0;
+			B := 1;
+
+		DBMS_OUTPUT.PUT_LINE(A);
+		DBMS_OUTPUT.PUT_LINE(B);
+
+		FOR I IN 1..N-2 LOOP
+			C := A+B;
+			DBMS_OUTPUT.PUT_LINE(C);
+			A := B;
+			B := C;
+		END LOOP;
+	
+	END;   
+END; 
+/
+
+```
+---
