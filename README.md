@@ -65,7 +65,7 @@ SQL> UPDATE WORKS_ON
   2  SET PNO = 3
   3  WHERE SSN = 1;
 ```
-
+---
 ### MongoDB
 ```js
 > use company
@@ -108,7 +108,7 @@ SQL> UPDATE WORKS_ON
 ```js
 > db.Employee.find({'PNO':2}, {'SSN':1, 'Name':1, '_id':0}).pretty()
 ```
-
+---
 ### PL/SQL
 
 #### Write a program that gives all employees in Department 1 a 15% pay increase. Display a message displaying how many employees were awarded the increase.
@@ -123,7 +123,7 @@ BEGIN
 END;
 /
 ```
-
+---
 
 ## Exercise 2
 
@@ -184,7 +184,7 @@ SQL> SELECT SNAME FROM SUPPLIER WHERE SID IN (
 ```sql
 SQL> DELETE PART WHERE COLOR='BROWN';
 ```
-
+---
 ### MongoDB
 
 ```js
@@ -212,10 +212,10 @@ SQL> DELETE PART WHERE COLOR='BROWN';
 ```js
 > db.warehouse.find({'PID':1}, {'SID':1, 'SNAME':1, '_id':0}).pretty()
 ```
-
+---
 ### PL/SQL
 
-#### WriteaPL/SQL program to display the contents of the above tables and then update the quantity of parts shipped by 5%
+#### Write a PL/SQL program to display the contents of the above tables and then update the quantity of parts shipped by 5%
 
 ```sql
 DECLARE
@@ -247,7 +247,7 @@ BEGIN
 	LOOP
 		FETCH C2 INTO SUPPLIER_RECORD;
 		EXIT WHEN C2%NOTFOUND;
-		DBMS_OUTPUT.PUT_LINE(SUPPLIER_RECORD.SID || ‘ ' || SUPPLIER_RECORD.SNAME’);
+		DBMS_OUTPUT.PUT_LINE(SUPPLIER_RECORD.SID || ' ' || SUPPLIER_RECORD.SNAME’);
 	END LOOP;
 
 	DBMS_OUTPUT.PUT_LINE(‘SUPPLY TABLE:’);
@@ -266,3 +266,121 @@ BEGIN
 END;
 /
 ```
+---
+## Exercise 3
+
+### SQL
+
+#### Create Boat table
+
+```
+SQL> CREATE TABLE BOAT(
+  2  	BID INTEGER PRIMARY KEY,
+  3  	BNAME VARCHAR(25),
+  4  	BCOLOR VARCHAR(25)
+  5  );
+```
+
+#### Create Sailor table
+
+```sql
+SQL> CREATE TABLE SAILOR(
+  2  	SID INTEGER PRIMARY KEY,
+  3  	SNAME VARCHAR(25),  
+  4   	SAGE NUMBER(2)
+  5  );
+```
+
+#### Create Reserve table
+
+```sql
+SQL> CREATE TABLE RESERVE(
+  2  	BID INTEGER,
+  3  	SID INTEGER,
+  4  	DAY VARCHAR(11),
+  5  	PRIMARY KEY(BID, SID),
+  6  	FOREIGN KEY(BID) REFERENCES BOAT(BID) ON DELETE CASCADE,
+  7  	FOREIGN KEY(SID) REFERENCES SAILOR(SID) ON DELETE CASCADE
+  8  );
+```
+
+#### Obtain the bid of the boats reserved by ‘BOB’
+
+```sql
+SQL> SELECT DISTINCT(BID)
+  2  FROM RESERVE, SAILOR
+  3  WHERE RESERVE.SID = SAILOR.SID AND SAILOR.SNAME = 'BOB';
+```
+
+#### Retrieve the bid of the boats reserved by all the sailors
+
+```sql
+SQL> SELECT BID FROM BOAT WHERE NOT EXISTS (
+  2  	SELECT SAILOR.SID FROM SAILOR
+  3  	MINUS
+  4  	SELECT RESERVE.SID FROM RESERVE WHERE RESERVE.BID = BOAT.BID
+  5  );
+```
+
+#### Find the number of boats reserved by each sailor
+
+```sql
+SQL> SELECT SAILOR.SID, SAILOR.SNAME, COUNT(SAILOR.SID) AS NO_OF_BOATS_RESERVED
+  2  FROM RESERVE, SAILOR
+  3  WHERE RESERVE.SID = SAILOR.SID
+  4  GROUP BY SAILOR.SID, SAILOR.SNAME
+  5  ORDER BY SAILOR.SID;
+```
+---
+### MongoDB
+
+```js
+> use harbor
+
+> db.createCollection('Boat');
+
+> db.Boat.insert({'BID': 1, 'BNAME':'A', 'COLOR':'RED', 'SID':1, 'SNAME':'X'});
+
+> db.Boat.insert({'BID': 1, 'BNAME':'A', 'COLOR':'RED', 'SID':2, 'SNAME':'Y'});
+
+> db.Boat.insert({'BID': 2, 'BNAME':'B', 'COLOR':'WHITE', 'SID':2, 'SNAME':'Y'});
+```
+
+#### Obtain the number of boats obtained by sailor 'Y'
+
+```js
+> db.Boat.find({'SNAME':'Y'}).pretty().count()
+```
+
+#### Retrieve boats of color 'RED'
+
+```js
+> db.Boat.find({'COLOR':'RED'}, {'BID':1, 'BNAME':1, '_id':0}).pretty();
+```
+---
+### PL/SQL
+
+#### Write a PL/SQL program to check whether a given number is prime or not
+
+```sql
+DECLARE
+	N NUMBER := &N;
+	FLAG NUMBER := 1;
+	I NUMBER;
+
+BEGIN
+	FOR I IN 2..N/2 LOOP
+		IF MOD(N, I) = 0 THEN
+			FLAG = 0
+			EXIT
+		END IF;
+	END LOOP;
+	IF FLAG = 0 THEN
+		DBMS_OUTPUT.PUT_LINE(N || “ IS COMPOSITE”)
+	ELSE
+		DBMS_OUTPUT.PUT_LINE(N || “ IS PRIME”)
+	END IF;
+END; 
+/
+```
+---
